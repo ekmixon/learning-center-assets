@@ -38,7 +38,6 @@ def weighted_image(weight):
 @app.route('/ads', methods=['GET', 'POST'])
 def status():
     if flask_request.method == 'GET':
-
         try:
             advertisements = Advertisement.query.all()
             app.logger.info(f"Total advertisements available: {len(advertisements)}")
@@ -53,13 +52,15 @@ def status():
             return err
 
     elif flask_request.method == 'POST':
-
         try:
             # create a new advertisement with random name and value
             advertisements_count = len(Advertisement.query.all())
-            new_advertisement = Advertisement('Advertisement ' + str(discounts_count + 1),
-                                    '/',
-                                    random.randint(10,500))
+            new_advertisement = Advertisement(
+                f'Advertisement {str(discounts_count + 1)}',
+                '/',
+                random.randint(10, 500),
+            )
+
             app.logger.info(f"Adding advertisement {new_advertisement}")
             db.session.add(new_advertisement)
             db.session.commit()

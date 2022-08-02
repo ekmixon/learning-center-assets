@@ -34,19 +34,22 @@ def status():
         # adding a half sleep to test something
         time.sleep(2.5)
 
-        influencer_count = 0
-        for discount in discounts:
-            if discount.discount_type.influencer:
-                influencer_count += 1
+        influencer_count = sum(
+            1 for discount in discounts if discount.discount_type.influencer
+        )
+
         app.logger.info(
             f"Total of {influencer_count} influencer specific discounts as of this request")
         return jsonify([b.serialize() for b in discounts])
     elif flask_request.method == 'POST':
         # create a new discount with random name and value
         discounts_count = len(Discount.query.all())
-        new_discount = Discount('Discount ' + str(discounts_count + 1),
-                                r.get_random_word(),
-                                random.randint(10, 500))
+        new_discount = Discount(
+            f'Discount {str(discounts_count + 1)}',
+            r.get_random_word(),
+            random.randint(10, 500),
+        )
+
         app.logger.info(f"Adding discount {new_discount}")
         db.session.add(new_discount)
         db.session.commit()

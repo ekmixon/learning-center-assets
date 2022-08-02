@@ -33,9 +33,7 @@ async def think(subject):
     #redis_client.incr('hits')
     #aiohttp_logger.info('Number of hits is {}' .format(redis_client.get('hits').decode('utf-8')))
     tracer.current_span().set_tag('subject', subject)
-    cached_thought = redis_client.get(subject)
-    
-    if cached_thought:
+    if cached_thought := redis_client.get(subject):
         return pickle.loads(cached_thought)
 
     await asyncio.sleep(0.5)

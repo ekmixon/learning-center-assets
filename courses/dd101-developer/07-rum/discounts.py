@@ -31,10 +31,10 @@ def status():
         discounts = Discount.query.all()
         app.logger.info(f"Discounts available: {len(discounts)}")
 
-        influencer_count = 0
-        for discount in discounts:
-            if discount.discount_type.influencer:
-                influencer_count += 1
+        influencer_count = sum(
+            1 for discount in discounts if discount.discount_type.influencer
+        )
+
         app.logger.info(f"Total of {influencer_count} influencer specific discounts as of this request")
         # time experiment. DO NOT RELEASE TO PRODUCTION!!!!
         time.sleep(2.5)
@@ -45,10 +45,13 @@ def status():
         new_discount_type = DiscountType('Random Savings',
                                          'price * .9',
                                          None)
-        new_discount = Discount('Discount ' + str(discounts_count + 1),
-                                r.get_random_word(),
-                                random.randint(10,500),
-                                new_discount_type)
+        new_discount = Discount(
+            f'Discount {str(discounts_count + 1)}',
+            r.get_random_word(),
+            random.randint(10, 500),
+            new_discount_type,
+        )
+
         app.logger.info(f"Adding discount {new_discount}")
         db.session.add(new_discount)
         db.session.commit()

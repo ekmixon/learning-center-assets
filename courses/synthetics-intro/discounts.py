@@ -26,10 +26,10 @@ def get_discount():
         discounts = Discount.query.options(joinedload('*')).all()
         app.logger.info(f"Discounts available: {len(discounts)}")
 
-        influencer_count = 0
-        for discount in discounts:
-            if discount.discount_type.influencer:
-                influencer_count += 1
+        influencer_count = sum(
+            1 for discount in discounts if discount.discount_type.influencer
+        )
+
         app.logger.info(f"Total of {influencer_count} influencer specific discounts as of this request")
         return jsonify([b.serialize() for b in discounts])
 
@@ -54,8 +54,8 @@ def add_discount():
 
         discount_name = random.choice(words)
 
-        for i in range(random.randint(1,3)):
-            discount_name += ' ' + random.choice(words)
+        for _ in range(random.randint(1,3)):
+            discount_name += f' {random.choice(words)}'
 
         new_discount = Discount(discount_name, 
                                 random.choice(words).upper(),

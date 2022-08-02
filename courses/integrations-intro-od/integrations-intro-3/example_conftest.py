@@ -4,7 +4,7 @@ import pytest
 
 from datadog_checks.dev import docker_run, get_docker_hostname, get_here
 
-URL = 'http://{}:8000'.format(get_docker_hostname())
+URL = f'http://{get_docker_hostname()}:8000'
 SEARCH_STRING = 'Thank you for using nginx.'
 INSTANCE = {'url': URL, 'search_string': SEARCH_STRING}
 

@@ -39,6 +39,6 @@ def post_log():
     }
     r=requests.post(url, data=json.dumps(payload), headers=headers)
 
-for i in range(posts):
+for _ in range(posts):
     post_log()
     time.sleep(3)

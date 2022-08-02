@@ -24,16 +24,17 @@ def hello():
 @app.route('/discount', methods=['GET', 'POST'])
 def status():
     if flask_request.method == 'GET':
-
         try:
             discounts = Discount.query.options(joinedload('*')).all()
             if random.randint(1, 10) > 7:
               app.logger.error("An error occurred while calculating influencer vectors")
             app.logger.info(f"Discounts available: {len(discounts)}")
-            influencer_count = 0
-            for discount in discounts:
-                if discount.discount_type.influencer:
-                    influencer_count += 1
+            influencer_count = sum(
+                1
+                for discount in discounts
+                if discount.discount_type.influencer
+            )
+
             app.logger.info(f"Total of {influencer_count} influencer specific discounts as of this request")
             return jsonify([b.serialize() for b in discounts])
 
@@ -45,17 +46,19 @@ def status():
             return err
 
     elif flask_request.method == 'POST':
-
         try:
             # create a new discount with random name and value
             discounts_count = len(Discount.query.all())
             new_discount_type = DiscountType('Random Savings',
                                              'price * .9',
                                              None)
-            new_discount = Discount('Discount ' + str(discounts_count + 1),
-                                    r.get_random_word(),
-                                    random.randint(10,500),
-                                    new_discount_type)
+            new_discount = Discount(
+                f'Discount {str(discounts_count + 1)}',
+                r.get_random_word(),
+                random.randint(10, 500),
+                new_discount_type,
+            )
+
             app.logger.info(f"Adding discount {new_discount}")
             db.session.add(new_discount)
             db.session.commit()

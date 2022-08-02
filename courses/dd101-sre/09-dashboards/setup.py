@@ -22,10 +22,15 @@ def find_dashboard(dashboard_name):
         api_instance = dashboards_api.DashboardsApi(api_client)
         try:
             api_response = api_instance.list_dashboards()
-            for dashboard in api_response.dashboards:
-                if dashboard.title == dashboard_name:
-                    return dashboard
-            return False
+            return next(
+                (
+                    dashboard
+                    for dashboard in api_response.dashboards
+                    if dashboard.title == dashboard_name
+                ),
+                False,
+            )
+
         except ApiException as e:
             print("Exception when searching for dashboard: {0}".format(e))
             sys.exit(1)
@@ -56,12 +61,11 @@ def find_monitor(monitor_name):
         api_instance = monitors_api.MonitorsApi(api_client)
         try:
             api_response = api_instance.search_monitors(query=monitor_name)
-            if api_response.metadata.total_count > 0:
-                monitor = [mon for mon in api_response.monitors if mon['classification'] == 'apm'][0]
-                return monitor['id']
-            else:
+            if api_response.metadata.total_count <= 0:
                 return 0
 
+            monitor = [mon for mon in api_response.monitors if mon['classification'] == 'apm'][0]
+            return monitor['id']
         except ApiException as e:
             print("Exception searching for monitor: {0}".format(e))
             sys.exit(1)
@@ -72,12 +76,11 @@ def find_slo(slo_name):
         api_instance = service_level_objectives_api.ServiceLevelObjectivesApi(api_client)
         try:
             api_response = api_instance.list_slos(query=slo_name)
-            if len(api_response.data) > 0:
-                slo = api_response.data[0]
-                return slo['id']
-            else:
+            if len(api_response.data) <= 0:
                 return ''
 
+            slo = api_response.data[0]
+            return slo['id']
         except ApiException as e:
             print("Exception searching for SLO: {0}".format(e))
             sys.exit(1)
@@ -125,13 +128,12 @@ dashboard = {}
 with console.status("Creating users") as status:
 
     status.update("Creating dashboard")
-    dashboard = find_dashboard(dashboard_name)
-    if not dashboard:
-        dashboard = create_dashboard(dashboard_json_path, api_key, app_key)
-        console.log("Dashboard id {0} [green]created[/green]".format(dashboard["id"]))
-    else:
+    if dashboard := find_dashboard(dashboard_name):
         console.log(dashboard_name, "[green]exists[/green]")
 
+    else:
+        dashboard = create_dashboard(dashboard_json_path, api_key, app_key)
+        console.log("Dashboard id {0} [green]created[/green]".format(dashboard["id"]))
     status.update("Creating monitor")
     monitor_id = find_monitor(monitor_name)
     if monitor_id > 0:
@@ -143,8 +145,7 @@ with console.status("Creating users") as status:
       create_slo(slo_name, monitor_id)
 
     status.update("Creating SLO")
-    slo_id = find_slo(slo_name)
-    if slo_id:
+    if slo_id := find_slo(slo_name):
         console.log("SLO id {0} [green]exists[/green]".format(slo_id))
     else:
         slo_id = create_slo(slo_name, monitor_id)
